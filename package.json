@@ -1,0 +1,28 @@
+{
+  "name": "spyglasssql",
+  "module": "index.ts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch index.ts",
+    "build": "bun build --compile index.ts --outfile spyglass",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "webview-bun": "^2.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.8",
+    "@types/bun": "^1.2.15",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.1",
+    "eslint": "^9.28.0",
+    "eslint-config": "github:exoRift/eslint-config",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-singlefile": "^2.2.0"
+  }
+}
