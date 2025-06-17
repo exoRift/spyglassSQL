@@ -13,10 +13,13 @@ const VIEWS = {
   Dashboard
 }
 
-function renderRoute (route: keyof typeof VIEWS, props?: object): void {
+document.body.setAttribute('data-theme', config.theme)
+window.addEventListener('error', (e) => { void logError('Webview Runtime Error:', e.message) }, { passive: true })
+
+export function renderRoute (route: keyof typeof VIEWS, props?: object): void {
   const View = VIEWS[route]
 
-  root.render(<View renderRoute={renderRoute} {...props} />)
+  root.render(<View navigate={renderRoute} {...props} />)
 }
 
 renderRoute('Connections')

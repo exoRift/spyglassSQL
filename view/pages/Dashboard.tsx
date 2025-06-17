@@ -1,3 +1,5 @@
-export default function Dashboard ({ renderRoute }): React.ReactNode {
-  return <div className="text-blue-500" onClick={() => renderRoute('Connections')}>bar</div>
+import type { renderRoute } from '../index'
+
+export default function Dashboard ({ navigate }: { navigate: typeof renderRoute }): React.ReactNode {
+  return <div className='text-blue-500' onClick={() => navigate('Connections')}>bar</div>
 }

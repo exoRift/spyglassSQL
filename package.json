@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --watch index.ts",
-    "build": "bun build --compile index.ts --outfile spyglass",
+    "build": "NODE_ENV=production vite build view && bun build -e vite --compile --production --minify --sourcemap index.ts --outfile spyglass; rm -rf ./view/dist/",
     "lint": "eslint ."
   },
   "dependencies": {
+    "knex": "^3.1.0",
+    "valibot": "^1.1.0",
     "webview-bun": "^2.4.0"
   },
   "devDependencies": {
@@ -17,10 +19,13 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.1",
+    "daisyui": "^5.0.43",
     "eslint": "^9.28.0",
     "eslint-config": "github:exoRift/eslint-config",
     "react": "^19.1.0",
+    "react-daisyui": "^5.0.5",
     "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-singlefile": "^2.2.0"
