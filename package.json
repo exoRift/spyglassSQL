@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --watch index.ts",
-    "build": "NODE_ENV=production vite build view && bun build -e vite --compile --production --minify --sourcemap index.ts --outfile spyglass; rm -rf ./view/dist/",
+    "build": "NODE_ENV=production vite build view && bun build -e vite -e pg -e pg-query-stream -e sqlite3 -e better-sqlite3 -e mysql -e mysql2 -e oracledb -e tedious --compile --production --minify --sourcemap index.ts --outfile spyglass; rm -rf ./view/dist/",
     "lint": "eslint ."
   },
   "dependencies": {

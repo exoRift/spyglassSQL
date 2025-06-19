@@ -77,8 +77,14 @@ html {
   @apply transition-colors duration-300;
 }
 
+
+html, html * {
+  scrollbar-gutter: auto !important;
+}
+
+
 body {
-  @apply transition-colors duration-300;
+  @apply transition-colors duration-300 h-screen;
   color-scheme: light dark;
 }
 
@@ -88,9 +94,4 @@ body[data-theme='light'] {
 
 body[data-theme='dark'] {
   color-scheme: dark;
-}
-
-html.modal-open,
-body.modal-open {
-  overflow: auto !important;
 }

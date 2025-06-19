@@ -1,11 +1,12 @@
 import { Webview } from 'webview-bun'
 import path from 'path'
 import * as v from 'valibot'
+import Knex from 'knex'
 
 import * as logger from './lib/logger'
 
 const Connection = v.object({
-  environment: v.picklist(['local', 'test', 'dev', 'staging', 'prod']),
+  environment: v.picklist(['local', 'testing', 'development', 'staging', 'production']),
   name: v.string(),
   username: v.string(),
   password: v.nullable(v.string()),
@@ -48,9 +49,32 @@ const binds = {
   logWarn: logger.warn,
   logError: logger.error,
   logDebug: logger.debug,
-  saveConfig (cfg: Config) {
+  saveConfig (cfg: Config): Promise<number> {
     Object.assign(config, cfg)
     return Bun.write(CONFIG_LOCATION, JSON.stringify(config, null, 2))
+  },
+  async testConnection (options: Config['connections'][number] & { password: string }): Promise<boolean> {
+    logger.debug('Installing:', options.client)
+    await Bun.$`bun install ${options.client} --no-save`
+      .then(() => logger.debug(options.client, 'installed'))
+      .catch(() => logger.error(options.client, 'failed to install'))
+
+    logger.debug('bruh')
+
+    const connection = Knex({
+      client: options.client,
+      connection: {
+        user: options.username,
+        password: options.password,
+        host: options.host,
+        port: options.port,
+        database: options.database
+      }
+    })
+
+    return await connection.raw('SELECT 1 as result')
+      .then(() => true)
+      .catch(() => false)
   }
 } as const
 
@@ -68,6 +92,7 @@ declare global {
   var logError: Promisify<typeof binds.logError>
   var logDebug: Promisify<typeof binds.logDebug>
   var saveConfig: Promisify<typeof binds.saveConfig>
+  var testConnection: Promisify<typeof binds.testConnection>
 }
 /* eslint-enable no-var */
 
