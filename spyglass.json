@@ -1,0 +1,15 @@
+{
+  "connections": [
+    {
+      "name": "Testing",
+      "environment": "testing",
+      "username": "arthur",
+      "password": "",
+      "host": "localhost",
+      "database": "spyglass",
+      "client": "pg",
+      "savepass": "on"
+    }
+  ],
+  "theme": "system"
+}
