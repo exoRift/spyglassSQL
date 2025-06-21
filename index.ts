@@ -3,28 +3,12 @@ import path from 'path'
 import { type } from 'arktype'
 import Knex from 'knex'
 
+import { type Connection, Config } from './lib/config'
 import * as logger from './lib/logger'
 
-const Connection = type({
-  environment: '"local" | "testing" | "development" | "staging" | "production"',
-  name: 'string',
-  username: 'string',
-  'password?': 'string',
-  host: 'string',
-  'port?': type.or('number | string.numeric.parse', type('""').pipe(() => undefined)),
-  database: 'string',
-  client: '"pg" | "sqlite3" | "mysql" | "oracledb" | "tedious"'
-})
-export type Connection = typeof Connection.infer
-
-const Config = type({
-  theme: type('"system" |  "light" | "dark"').default('system'),
-  connections: Connection.array().default(() => [])
-})
-export type Config = typeof Config.infer
-
 const CONFIG_LOCATION = path.resolve(process.cwd(), './spyglass.json')
-logger.debug(CONFIG_LOCATION)
+logger.debug('Config Location:', CONFIG_LOCATION)
+
 function loadConfig (): Promise<Config> {
   return Bun.file(CONFIG_LOCATION, { type: 'json' })
     .json()
@@ -59,11 +43,11 @@ const binds = {
   logWarn: logger.warn,
   logError: logger.error,
   logDebug: logger.debug,
+  // TODO: Assign schema link
   async saveConfig (cfg: Config): Promise<null | type.errors> {
     const parsed = Config(cfg)
     if (parsed instanceof type.errors) return parsed
     Object.assign(config, parsed)
-    logger.debug(config)
     return await Bun.write(CONFIG_LOCATION, JSON.stringify(config, null, 2))
       .then(() => null)
   },
@@ -136,6 +120,7 @@ console.debug = (...args) => {
   void logDebug(...args)
   originalDebug(...args)
 }
+window.addEventListener('error', (e) => { void logError('Webview Runtime Error:', e.message) }, { passive: true })
 `)
 if (process.env.NODE_ENV === 'production') {
   const { default: template } = await import('./view/dist/index.html', { with: { type: 'file' } })
@@ -158,5 +143,6 @@ if (process.env.NODE_ENV === 'production') {
     if (!url) throw Error('Unexpected: Vite did not return a local address')
     webview.navigate(url)
     webview.runNonBlocking()
+    webview.once('close', () => process.exit(0))
   }, { once: true })
 }

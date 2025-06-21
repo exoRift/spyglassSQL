@@ -13,8 +13,24 @@ const VIEWS = {
   Dashboard
 }
 
+// window.config = {
+//   "connections": [
+//     {
+//       "name": "Testing",
+//       "environment": "testing",
+//       "username": "arthur",
+//       "password": "",
+//       "host": "localhost",
+//       "database": "spyglass",
+//       "client": "pg",
+//       "savepass": "on",
+//       "charts": []
+//     }
+//   ],
+//   "theme": "system"
+// }
+
 document.body.setAttribute('data-theme', config.theme)
-window.addEventListener('error', (e) => { void logError('Webview Runtime Error:', e.message) }, { passive: true })
 
 export function renderRoute<R extends keyof typeof VIEWS> (route: R, props: Omit<React.ComponentProps<(typeof VIEWS)[R]>, 'navigate'>): void {
   const View = VIEWS[route] as React.FunctionComponent<any>
