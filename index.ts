@@ -43,6 +43,9 @@ const binds = {
   logWarn: logger.warn,
   logError: logger.error,
   logDebug: logger.debug,
+  getConfig (): Config {
+    return config
+  },
   // TODO: Assign schema link
   async saveConfig (cfg: Config): Promise<null | type.errors> {
     const parsed = Config(cfg)
@@ -92,6 +95,7 @@ declare global {
   var logWarn: Promisify<typeof binds.logWarn>
   var logError: Promisify<typeof binds.logError>
   var logDebug: Promisify<typeof binds.logDebug>
+  var getConfig: Promisify<typeof binds.getConfig>
   var saveConfig: Promisify<typeof binds.saveConfig>
   var testConnection: Promisify<typeof binds.testConnection>
 }

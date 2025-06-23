@@ -24,7 +24,60 @@ const VIEWS = {
 //       "database": "spyglass",
 //       "client": "pg",
 //       "savepass": "on",
-//       "charts": []
+//       "charts": [
+//         {
+//           "pos": {
+//             "x": 33,
+//             "y": 19,
+//             "width": 20,
+//             "height": 20
+//           },
+//           "title": "untitled",
+//           "xTitle": "untiled x",
+//           "yTitle": "untitled y",
+//           "type": "line",
+//           "table": null
+//         },
+//         {
+//           "pos": {
+//             "x": 46,
+//             "y": 36,
+//             "width": 30,
+//             "height": 30
+//           },
+//           "title": "untitled",
+//           "xTitle": "untiled x",
+//           "yTitle": "untitled y",
+//           "type": "line",
+//           "table": null
+//         },
+//         {
+//           "pos": {
+//             "x": 60,
+//             "y": 16,
+//             "width": 30,
+//             "height": 30
+//           },
+//           "title": "untitled",
+//           "xTitle": "untiled x",
+//           "yTitle": "untitled y",
+//           "type": "line",
+//           "table": null
+//         },
+//         {
+//           "pos": {
+//             "x": 39,
+//             "y": 24,
+//             "width": 30,
+//             "height": 30
+//           },
+//           "title": "untitled",
+//           "xTitle": "untiled x",
+//           "yTitle": "untitled y",
+//           "type": "line",
+//           "table": null
+//         }
+//       ]
 //     }
 //   ],
 //   "theme": "system"
