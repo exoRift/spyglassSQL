@@ -12,6 +12,7 @@
   "dependencies": {
     "arktype": "^2.1.20",
     "knex": "^3.1.0",
+    "knex-schema-inspector": "^3.1.0",
     "webview-bun": "github:exoRift/webview-bun"
   },
   "devDependencies": {
@@ -24,6 +25,7 @@
     "dashup": "^1.1.1",
     "eslint": "^9.28.0",
     "eslint-config": "github:exoRift/eslint-config",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "react": "^19.1.0",
     "react-daisyui": "^5.0.5",
     "react-dom": "^19.1.0",

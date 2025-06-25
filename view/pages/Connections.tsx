@@ -79,7 +79,7 @@ function ConnectionCreateButton ({ onCreate }: { onCreate?: () => void }): React
         </Modal.Header>
 
         <Modal.Body>
-          <Form id='create' className='space-y-4' onSubmit={onSubmit}>
+          <Form id='create_form' className='space-y-4' onSubmit={onSubmit}>
             <div className='flex gap-4 *:grow'>
               <div className='fieldset w-full'>
                 <label htmlFor='name' className='label'>
@@ -177,13 +177,13 @@ function ConnectionCreateButton ({ onCreate }: { onCreate?: () => void }): React
         </Modal.Body>
 
         <Modal.Actions>
-          <Button id='test' className='mr-auto' color='neutral' type='submit' form='create'>
+          <Button id='test' className='mr-auto' color='neutral' type='submit' form='create_form'>
             <MdBuild className='text-xl' />
             Test Connection
           </Button>
 
           <Button variant='outline' onClick={() => setShowCreateModal(false)} type='button'>Cancel</Button>
-          <Button id='submit' color='success' type='submit' form='create'>Save</Button>
+          <Button id='submit' color='success' type='submit' form='create_form'>Save</Button>
         </Modal.Actions>
       </Modal.Legacy>
 

@@ -2,6 +2,8 @@ import { Webview } from 'webview-bun'
 import path from 'path'
 import { type } from 'arktype'
 import Knex from 'knex'
+import type { Column } from 'knex-schema-inspector/dist/types/column'
+import inspector from 'knex-schema-inspector'
 
 import { type Connection, Config } from './lib/config'
 import * as logger from './lib/logger'
@@ -26,6 +28,8 @@ function loadConfig (): Promise<Config> {
 
 const config = await loadConfig()
 
+let activeConnection: Knex.Knex | undefined
+
 /** View */
 const webview = new Webview(process.env.NODE_ENV !== 'production')
 
@@ -36,6 +40,31 @@ function moduleExists (name: string): boolean {
   } catch {
     return false
   }
+}
+
+async function ensureInstalled (driver: Connection['client']): Promise<void> {
+  const installed = moduleExists(driver)
+
+  if (!installed) {
+    logger.debug('Installing:', driver)
+    await Bun.$`bun install ${driver} --no-save`
+      .then(() => logger.debug(driver, 'installed'))
+      .catch(() => logger.error(driver, 'failed to install'))
+  }
+}
+
+function constructConnection (options: Connection & { password: string }): Knex.Knex {
+  return Knex({
+    client: options.client,
+    connection: {
+      application_name: 'SpyglassSQL',
+      user: options.username,
+      password: options.password,
+      host: options.host,
+      port: options.port,
+      database: options.database
+    }
+  })
 }
 
 const binds = {
@@ -55,30 +84,61 @@ const binds = {
       .then(() => null)
   },
   async testConnection (options: Connection & { password: string }): Promise<number | null> {
-    const installed = moduleExists(options.client)
+    await ensureInstalled(options.client)
 
-    if (!installed) {
-      logger.debug('Installing:', options.client)
-      await Bun.$`bun install ${options.client} --no-save`
-        .then(() => logger.debug(options.client, 'installed'))
-        .catch(() => logger.error(options.client, 'failed to install'))
-    }
-
-    const connection = Knex({
-      client: options.client,
-      connection: {
-        user: options.username,
-        password: options.password,
-        host: options.host,
-        port: options.port,
-        database: options.database
-      }
-    })
+    const connection = constructConnection(options)
 
     const ts = performance.now()
-    return await connection.raw('SELECT 1 as result')
-      .then(() => performance.now() - ts)
+    return await connection.raw('SELECT current_user')
+      .then((result) => performance.now() - ts)
       .catch(() => null)
+  },
+  async setActiveConnection (index: number, password?: string): Promise<null> {
+    const connection = structuredClone(config.connections[index])
+    if (!connection) throw Error('Somehow trying to set nonexistent active connection')
+    await ensureInstalled(connection.client)
+
+    if (password) connection.password = password
+    if (!connection.password) throw Error('Missing password for connection')
+
+    activeConnection = constructConnection(connection as any)
+
+    return null
+  },
+  getTables (): Promise<Partial<Record<string, Column[]>> | null> {
+    if (!activeConnection) throw Error('No active connection')
+
+    const spector = inspector(activeConnection)
+
+    const query = activeConnection.client.config.client === 'pg'
+      ? activeConnection.raw<{ rows: Array<{ full_table_name: string }> }>(
+`
+SELECT table_schema || '.' || table_name AS full_table_name
+FROM information_schema.tables
+WHERE table_type = 'BASE TABLE'
+  AND table_schema NOT IN ('pg_catalog', 'information_schema')
+`
+      )
+        .then(({ rows }) => rows.map((r) => r.full_table_name))
+      : spector.tables()
+
+    return query
+      .then((tables) => Promise.all(tables.map((t) => {
+        let tableName
+        const dotIndex = t.indexOf('.')
+        if (dotIndex !== -1) {
+          const schema = t.slice(0, dotIndex)
+          tableName = t.slice(dotIndex + 1)
+          spector.withSchema?.(schema)
+        } else tableName = t
+
+        return spector.columnInfo(tableName).then((c) => [t, c])
+      })))
+      .then(Object.fromEntries)
+      .catch((err) => {
+        logger.warn('Failed to connect to database', err)
+        return null
+      })
   }
 } as const
 
@@ -98,6 +158,8 @@ declare global {
   var getConfig: Promisify<typeof binds.getConfig>
   var saveConfig: Promisify<typeof binds.saveConfig>
   var testConnection: Promisify<typeof binds.testConnection>
+  var setActiveConnection: Promisify<typeof binds.setActiveConnection>
+  var getTables: Promisify<typeof binds.getTables>
 }
 /* eslint-enable no-var */
 
@@ -109,19 +171,19 @@ const originalError = console.error
 const originalWarn = console.warn
 const originalDebug = console.debug
 console.info = (...args) => {
-  void logInfo(...args)
+  void logInfo(...args).catch(() => logWarn('Failed to log to INFO))
   originalInfo(...args)
 }
 console.error = (...args) => {
-  void logError(...args)
+  void logError(...args).catch(() => logWarn('Failed to log to ERROR))
   originalError(...args)
 }
 console.warn = (...args) => {
-  void logWarn(...args)
+  void logWarn(...args).catch(() => logWarn('Failed to log to WARN))
   originalWarn(...args)
 }
 console.debug = (...args) => {
-  void logDebug(...args)
+  void logDebug(...args).catch(() => logWarn('Failed to log to DEBUG))
   originalDebug(...args)
 }
 window.addEventListener('error', (e) => { void logError('Webview Runtime Error:', e.message) }, { passive: true })

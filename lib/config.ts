@@ -14,16 +14,19 @@ const Chart = type({
     height: 'number'
   },
   title: 'string',
-  xTitle: 'string',
-  yTitle: 'string',
-  type: '"bar" | "line" | "pie"',
   table: 'string | null',
+  xTitle: 'string',
+  xColumn: 'string | null',
+  yTitle: 'string',
+  yColumn: 'string | null',
+  type: '"bar" | "line" | "pie"',
   'joins?': Join.array(),
   'where?': 'string',
   'map?': 'string',
   'xFormatter?': 'string',
   'yFormatter?': 'string'
 })
+export type Chart = typeof Chart.infer
 
 const Connection = type({
   environment: '"local" | "testing" | "development" | "staging" | "production"',

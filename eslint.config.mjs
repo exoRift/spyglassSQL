@@ -1,3 +1,10 @@
 import { config } from 'eslint-config'
+import reactHooks from 'eslint-plugin-react-hooks'
 
-export default config({ noJSDoc: true })
+/**
+ * @type {import('eslint').Linter.Config[]}
+ */
+export default [
+  ...await config({ noJSDoc: true }),
+  reactHooks.configs['recommended-latest']
+]
