@@ -64,7 +64,7 @@ function ConnectionCreateButton ({ onCreate }: { onCreate?: () => void }): React
 
         break
     }
-  }, [])
+  }, [onCreate])
 
   return (
     <>

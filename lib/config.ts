@@ -14,15 +14,28 @@ const Chart = type({
     height: 'number'
   },
   title: 'string',
+  subtitle: 'string',
   table: 'string | null',
   xTitle: 'string',
-  xColumn: 'string | null',
   yTitle: 'string',
-  yColumn: 'string | null',
-  type: '"bar" | "line" | "pie"',
+  method: type.or(
+    type({
+      type: '"column" | "aggregate_sum"',
+      x: 'string | null',
+      y: 'string | null'
+    }),
+    type({
+      type: '"aggregate_count"',
+      x: 'string | null'
+    }),
+    type({
+      type: '"custom"',
+      fn: 'string'
+    })
+  ),
+  style: '"bar" | "line" | "pie"',
   'joins?': Join.array(),
   'where?': 'string',
-  'map?': 'string',
   'xFormatter?': 'string',
   'yFormatter?': 'string'
 })

@@ -5,7 +5,7 @@ import Knex from 'knex'
 import type { Column } from 'knex-schema-inspector/dist/types/column'
 import inspector from 'knex-schema-inspector'
 
-import { type Connection, Config } from './lib/config'
+import { type Chart, type Connection, Config } from './lib/config'
 import * as logger from './lib/logger'
 
 const CONFIG_LOCATION = path.resolve(process.cwd(), './spyglass.json')
@@ -90,10 +90,16 @@ const binds = {
 
     const ts = performance.now()
     return await connection.raw('SELECT current_user')
-      .then((result) => performance.now() - ts)
+      .then(() => performance.now() - ts)
       .catch(() => null)
   },
   async setActiveConnection (index: number, password?: string): Promise<null> {
+    if (activeConnection) {
+      void activeConnection.destroy()
+      activeConnection = undefined
+    }
+    if (index === -1) return null
+
     const connection = structuredClone(config.connections[index])
     if (!connection) throw Error('Somehow trying to set nonexistent active connection')
     await ensureInstalled(connection.client)
@@ -139,8 +145,29 @@ WHERE table_type = 'BASE TABLE'
         logger.warn('Failed to connect to database', err)
         return null
       })
+  },
+  queryRows (chart: Pick<Chart, 'table' | 'where' | 'joins'> & { table: string }): Promise<any[] | null> {
+    if (!activeConnection) throw Error('Attempted to query without an active connection')
+
+    const query = activeConnection
+      .table(chart.table)
+      .select('*')
+    if (chart.joins) {
+      for (const join of chart.joins) {
+        query.join(join.table, `${chart.table}.${join.baseColumn}`, `${join.table}.${join.foreignColumn}`)
+      }
+    }
+    if (chart.where) query.whereRaw(chart.where)
+
+    return query
+      .then((rows) => rows)
+      .catch((err) => {
+        logger.error('Failed to executive query', err)
+        return null
+      })
   }
-} as const
+/* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
+} as const satisfies Record<string, Promise<{} | null> | {} | null>
 
 for (const name in binds) {
   webview.bind(name, binds[name as keyof typeof binds])
@@ -160,6 +187,7 @@ declare global {
   var testConnection: Promisify<typeof binds.testConnection>
   var setActiveConnection: Promisify<typeof binds.setActiveConnection>
   var getTables: Promisify<typeof binds.getTables>
+  var queryRows: Promisify<typeof binds.queryRows>
 }
 /* eslint-enable no-var */
 
@@ -193,7 +221,7 @@ if (process.env.NODE_ENV === 'production') {
   const compiled = await Bun.file(template).text()
   webview.init('window.addEventListener(\'contextmenu\', (e) => e.preventDefault(), { capture: true })')
   webview.setHTML(compiled)
-  webview.runNonBlocking()
+  webview.runNonBlocking(() => process.exit(0))
 } else {
   const worker = new Worker(Bun.resolveSync('./lib/dev/server', import.meta.dir))
 
@@ -208,7 +236,6 @@ if (process.env.NODE_ENV === 'production') {
     logger.debug('Vite running on URL:', url)
     if (!url) throw Error('Unexpected: Vite did not return a local address')
     webview.navigate(url)
-    webview.runNonBlocking()
-    webview.once('close', () => process.exit(0))
+    webview.runNonBlocking(() => process.exit(0))
   }, { once: true })
 }
